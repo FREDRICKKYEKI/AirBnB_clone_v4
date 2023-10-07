@@ -2,6 +2,7 @@ $(document).ready(function () {
   const amenityDict = {};
   const statesCities = {};
   const users = {};
+  let reviews = null;
   const localhost = 'localhost';
 
   $('input[data-attribute=amenity]').click(function () {
@@ -21,6 +22,7 @@ $(document).ready(function () {
         delete statesCities[$(this).attr('data-id')];
       }
       $('.locations h4').text(Object.values(statesCities).join(', '));
+      console.log('checked', statesCities);
     }
   );
 
@@ -51,37 +53,60 @@ $(document).ready(function () {
     data: '{}',
     contentType: 'application/json',
     success: function (data, status) {
+      console.log('first places', status);
       for (const place of data) {
         $('.places').append(
           `
-          <article>
-          <div class="title_box">
-            <h2>${place.name}</h2>
-            <div class="price_by_night">$${place.price_by_night}</div>
-          </div>
-          <div class="information">
-            <div class="max_guest">${place.max_guest} Guest${
+            <article>
+            <div class="title_box">
+              <h2>${place.name}</h2>
+              <div class="price_by_night">$${place.price_by_night}</div>
+            </div>
+            <div class="information">
+              <div class="max_guest">${place.max_guest} Guest${
             place.max_guest != 1 ? 's' : ''
           }</div>
-                  <div class="number_rooms">${place.number_rooms} Bedroom${
+                    <div class="number_rooms">${place.number_rooms} Bedroom${
             place.number_rooms != 1 ? 's' : ''
           }</div>
-                  <div class="number_bathrooms">${
-                    place.number_bathrooms
-                  } Bathroom${place.number_bathrooms != 1 ? 's' : ''}</div>
-          </div>
-          <div class="user">
-            <b>Owner:</b> ${users[place.user_id]?.first_name} ${
+                    <div class="number_bathrooms">${
+                      place.number_bathrooms
+                    } Bathroom${place.number_bathrooms != 1 ? 's' : ''}</div>
+            </div>
+            <div class="user">
+              <b>Owner:</b> ${users[place.user_id]?.first_name} ${
             users[place.user_id]?.last_name
           }
-          </div>
-          <div class="description">
-            ${place.description}
-          </div>
-        </article>
-          `
+            </div>
+            <div class="description">
+              ${place.description}
+            </div>
+            <div class=reviews>
+            <h3>Reviews</h3>
+            <span id=${place.id} class="show_review">Show</span>
+              <ul id="ul-${place.id}"></ul>
+              </div>
+          </article>
+            `
         );
       }
+    }
+  });
+
+  $(document).on('click', '.show_review', function () {
+    let id = $(this).attr('id');
+    $(`#ul-${id}`).text('Loading...');
+    if ($(this).text() === 'Show') {
+      $(this).text('Hide');
+      getReviews(id).then((data) => {
+        reviews = data;
+        $(`#ul-${id}`).empty();
+        $(`#ul-${id}`).append(`
+        ${reviews.map((review) => `<li>${review}</li>`).join('')}`);
+      });
+    } else {
+      $(this).text('Show');
+      $(`#ul-${id}`).empty();
     }
   });
 
@@ -100,6 +125,7 @@ $(document).ready(function () {
       ),
       success: function (data, status) {
         $('.places').empty();
+        console.log('success', data);
         for (const place of data) {
           $('.places').append(
             `
@@ -134,4 +160,25 @@ $(document).ready(function () {
       }
     });
   });
+
+  function getReviews(id = null) {
+    let reviewList = [];
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: `http://${localhost}:5001/api/v1/places/${id}/reviews`,
+        type: 'GET',
+        success: function (data, status) {
+          console.log(status);
+          for (const review of data) {
+            reviewList.push(review.text);
+          }
+          console.log(reviewList);
+          resolve(reviewList);
+        },
+        error: function (error) {
+          reject(error);
+        }
+      });
+    });
+  }
 });
