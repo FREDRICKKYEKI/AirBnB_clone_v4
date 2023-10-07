@@ -82,10 +82,10 @@ $(document).ready(function () {
               ${place.description}
             </div>
             <div class=reviews>
-            <h3>Reviews</h3>
-            <span id=${place.id} class="show_review">Show</span>
+              <h3>Reviews</h3>
+              <span id=${place.id} class="show_review">Show</span>
               <ul id="ul-${place.id}"></ul>
-              </div>
+            </div>
           </article>
             `
         );
@@ -152,6 +152,11 @@ $(document).ready(function () {
             </div>
             <div class="description">
               ${place.description}
+            </div>
+            <div class=reviews>
+              <h3>Reviews</h3>
+              <span id=${place.id} class="show_review">Show</span>
+              <ul id="ul-${place.id}"></ul>
             </div>
           </article>
             `
