@@ -1,10 +1,10 @@
 $(document).ready(function () {
-  /**@type {Object<string, string>}*/
   const amenityDict = {};
+  const statesCities = {};
   const users = {};
   const localhost = 'localhost';
 
-  $('input[type=checkbox]').click(function () {
+  $('input[data-attribute=amenity]').click(function () {
     if ($(this).is(':checked')) {
       amenityDict[$(this).attr('data-id')] = $(this).attr('data-name');
     } else {
@@ -12,6 +12,19 @@ $(document).ready(function () {
     }
     $('.amenities h4').text(Object.values(amenityDict).join(', '));
   });
+
+  $('input[data-attribute=state], input[data-attribute=city]').click(
+    function () {
+      if ($(this).is(':checked')) {
+        statesCities[$(this).attr('data-id')] = $(this).attr('data-name');
+      } else {
+        delete statesCities[$(this).attr('data-id')];
+      }
+      $('.locations h4').text(Object.values(statesCities).join(', '));
+      console.log('checked', statesCities);
+    }
+  );
+
   $.get(`http://${localhost}:5001/api/v1/status/`, function (data, status) {
     if (status === 'success') {
       $('DIV#api_status').addClass('available');
@@ -59,8 +72,8 @@ $(document).ready(function () {
                   } Bathroom${place.number_bathrooms != 1 ? 's' : ''}</div>
           </div>
           <div class="user">
-            <b>Owner:</b> ${users[place.user_id].first_name} ${
-            users[place.user_id].last_name
+            <b>Owner:</b> ${users[place.user_id]?.first_name} ${
+            users[place.user_id]?.last_name
           }
           </div>
           <div class="description">
@@ -74,19 +87,22 @@ $(document).ready(function () {
   });
 
   $('button.search_btn').click(function () {
+    console.log('Loading...');
     $.ajax({
       type: 'POST',
       url: `http://${localhost}:5001/api/v1/places_search/`,
       contentType: 'application/json',
       data: JSON.stringify(
-        Object.values(amenityDict).length > 1
+        Object.values(amenityDict).length > 1 || Object.values(statesCities) > 1
           ? {
-              amenities: [...Object.keys(amenityDict)]
+              amenities: [...Object.keys(amenityDict)],
+              states: [...Object.keys(statesCities)]
             }
           : {}
       ),
       success: function (data, status) {
         $('.places').empty();
+        console.log('success', data);
         for (const place of data) {
           $('.places').append(
             `
@@ -107,8 +123,8 @@ $(document).ready(function () {
                     } Bathroom${place.number_bathrooms != 1 ? 's' : ''}</div>
             </div>
             <div class="user">
-              <b>Owner:</b> ${users[place.user_id].first_name} ${
-              users[place.user_id].last_name
+              <b>Owner:</b> ${users[place.user_id]?.first_name} ${
+              users[place.user_id]?.last_name
             }
             </div>
             <div class="description">
