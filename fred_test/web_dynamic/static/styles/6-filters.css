@@ -126,3 +126,7 @@ button:hover {
 .popover input {
   margin-right: 10px;
 }
+
+.reviews h3 {
+  display: inline-block;
+}
