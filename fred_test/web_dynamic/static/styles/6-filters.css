@@ -46,13 +46,6 @@ button:hover {
   margin-top: 0;
   font-weight: 400;
   font-size: 14px;
-
-  text-overflow: ellipsis;
-  display: inline-block;
-  white-space: nowrap;
-  width:100%;
-  overflow-x: hidden;
-  height: max-content;
 }
 
 .locations {
@@ -64,6 +57,17 @@ button:hover {
 .amenities {
   height: 100%;
   width: 25%;
+}
+
+.amenities h4,
+.locations h4 {
+  text-overflow: ellipsis;
+  display: inline-block;
+  white-space: nowrap;
+  max-width: 80%;
+  overflow-x: hidden;
+  height: max-content;
+  white-space: nowrap;
 }
 
 .popover {
@@ -120,10 +124,9 @@ button:hover {
 }
 
 .popover input {
-  margin-left: 10px;
+  margin-right: 10px;
 }
 
-.amenities h4 {
-  text-overflow: ellipsis;
-
+.reviews h3 {
+  display: inline-block;
 }
