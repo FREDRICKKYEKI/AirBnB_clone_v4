@@ -24,6 +24,12 @@ button:hover {
   opacity: 0.9;
 }
 
+button[disabled = "disabled"] {
+  opacity: 0.5;
+  filter: grayscale(100%);
+  cursor: not-allowed;
+}
+
 .filters div {
   display: inline-grid;
 }

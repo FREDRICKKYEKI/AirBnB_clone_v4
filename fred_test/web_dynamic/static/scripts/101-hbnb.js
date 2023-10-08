@@ -53,7 +53,7 @@ $(document).ready(function () {
     data: '{}',
     contentType: 'application/json',
     success: function (data, status) {
-      console.log('first places', status);
+      console.log('all places', status);
       for (const place of data) {
         $('.places').append(
           `
@@ -81,9 +81,9 @@ $(document).ready(function () {
             <div class="description">
               ${place.description}
             </div>
-            <div class=reviews>
+            <div class="reviews" id="reviews-${place.id}">
               <h3>Reviews</h3>
-              <span id=${place.id} class="show_review">Show</span>
+              <span id="${place.id}" class="show_review">Show</span>
               <ul id="ul-${place.id}"></ul>
             </div>
           </article>
@@ -93,16 +93,18 @@ $(document).ready(function () {
     }
   });
 
-  $(document).on('click', '.show_review', function () {
+  $(document).on('click', 'span.show_review', function () {
     let id = $(this).attr('id');
     $(`#ul-${id}`).text('Loading...');
     if ($(this).text() === 'Show') {
       $(this).text('Hide');
-      getReviews(id).then((data) => {
-        reviews = data;
+
+      getReviews(id).then((reviews) => {
         $(`#ul-${id}`).empty();
-        $(`#ul-${id}`).append(`
-        ${reviews.map((review) => `<li>${review}</li>`).join('')}`);
+        $(`#ul-${id}`).append(
+          `${reviews.map((review) => `<li>${review}</li>`).join('')}`
+        );
+        $(`#reviews-${id} h3`).text(`${reviews.length} Reviews`);
       });
     } else {
       $(this).text('Show');
@@ -111,57 +113,66 @@ $(document).ready(function () {
   });
 
   $('button.search_btn').click(function () {
+    $(this).attr('disabled', true);
+    $('button.search_btn').text('Loading...');
+
     $.ajax({
       type: 'POST',
       url: `http://${localhost}:5001/api/v1/places_search/`,
       contentType: 'application/json',
-      data: JSON.stringify(
-        Object.values(amenityDict).length > 1 || Object.values(statesCities) > 1
-          ? {
-              amenities: [...Object.keys(amenityDict)],
-              states: [...Object.keys(statesCities)]
-            }
-          : {}
-      ),
+      data: JSON.stringify({
+        amenities: [...Object.keys(amenityDict)],
+        states: [...Object.keys(statesCities)]
+      }),
       success: function (data, status) {
         $('.places').empty();
+        $('button.search_btn').removeAttr('disabled');
+        $('button.search_btn').text('Search');
+
         console.log('success', data);
         for (const place of data) {
           $('.places').append(
             `
-            <article>
-            <div class="title_box">
-              <h2>${place.name}</h2>
-              <div class="price_by_night">$${place.price_by_night}</div>
-            </div>
-            <div class="information">
-              <div class="max_guest">${place.max_guest} Guest${
+              <article>
+                <div class="title_box">
+                  <h2>${place.name}</h2>
+                  <div class="price_by_night">$${place.price_by_night}</div>
+                </div>
+                <div class="information">
+                  <div class="max_guest">${place.max_guest} Guest${
               place.max_guest != 1 ? 's' : ''
             }</div>
-                    <div class="number_rooms">${place.number_rooms} Bedroom${
-              place.number_rooms != 1 ? 's' : ''
+                        <div class="number_rooms">${
+                          place.number_rooms
+                        } Bedroom${place.number_rooms != 1 ? 's' : ''}</div>
+                        <div class="number_bathrooms">${
+                          place.number_bathrooms
+                        } Bathroom${
+              place.number_bathrooms != 1 ? 's' : ''
             }</div>
-                    <div class="number_bathrooms">${
-                      place.number_bathrooms
-                    } Bathroom${place.number_bathrooms != 1 ? 's' : ''}</div>
-            </div>
-            <div class="user">
-              <b>Owner:</b> ${users[place.user_id]?.first_name} ${
+                </div>
+                <div class="user">
+                  <b>Owner:</b> ${users[place.user_id]?.first_name} ${
               users[place.user_id]?.last_name
             }
-            </div>
-            <div class="description">
-              ${place.description}
-            </div>
-            <div class=reviews>
-              <h3>Reviews</h3>
-              <span id=${place.id} class="show_review">Show</span>
-              <ul id="ul-${place.id}"></ul>
-            </div>
-          </article>
+                </div>
+                <div class="description">
+                  ${place.description}
+                </div>
+                <div class="reviews" id="reviews-${place.id}" class=reviews>
+                  <h3>Reviews</h3>
+                  <span id="${place.id}" class="show_review">Show</span>
+                  <ul id="ul-${place.id}"></ul>
+                </div>
+              </article>
             `
           );
         }
+      },
+      error: function (error) {
+        $('button.search_btn').removeAttr('disabled');
+        $('button.search_btn').text('Search');
+        console.log('error', error);
       }
     });
   });
@@ -173,11 +184,9 @@ $(document).ready(function () {
         url: `http://${localhost}:5001/api/v1/places/${id}/reviews`,
         type: 'GET',
         success: function (data, status) {
-          console.log(status);
           for (const review of data) {
             reviewList.push(review.text);
           }
-          console.log(reviewList);
           resolve(reviewList);
         },
         error: function (error) {
