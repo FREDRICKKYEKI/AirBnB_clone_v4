@@ -1,9 +1,10 @@
 $(document).ready(function () {
   const amenityDict = {};
-  const statesCities = {};
+  const states = {};
+  const cities = {};
   const users = {};
-  let reviews = null;
   const localhost = 'localhost';
+  let stateCityArray = [];
 
   $('input[data-attribute=amenity]').click(function () {
     if ($(this).is(':checked')) {
@@ -15,14 +16,35 @@ $(document).ready(function () {
   });
 
   $('input[data-attribute=state], input[data-attribute=city]').click(
+    //add to states and cities objects
     function () {
-      if ($(this).is(':checked')) {
-        statesCities[$(this).attr('data-id')] = $(this).attr('data-name');
-      } else {
-        delete statesCities[$(this).attr('data-id')];
+      if ($(this).attr('data-attribute') === 'city') {
+        if ($(this).is(':checked')) {
+          cities[$(this).attr('data-id')] = $(this).attr('data-name');
+        } else {
+          delete cities[$(this).attr('data-id')];
+        }
+      } else if ($(this).attr('data-attribute') === 'state') {
+        if ($(this).is(':checked')) {
+          states[$(this).attr('data-id')] = $(this).attr('data-name');
+        } else {
+          delete states[$(this).attr('data-id')];
+        }
       }
-      $('.locations h4').text(Object.values(statesCities).join(', '));
-      console.log('checked', statesCities);
+
+      //Display states and cities checked
+      if (
+        $(this).is(':checked') &&
+        !stateCityArray.includes($(this).attr('data-name'))
+      ) {
+        stateCityArray.push($(this).attr('data-name'));
+      } else if (!$(this).is(':checked')) {
+        stateCityArray = stateCityArray.filter(
+          (name) => name !== $(this).attr('data-name')
+        );
+      }
+      $('.locations h4').text(stateCityArray.join(', '));
+      // console.log('checked', stateCityArray);
     }
   );
 
@@ -53,7 +75,6 @@ $(document).ready(function () {
     data: '{}',
     contentType: 'application/json',
     success: function (data, status) {
-      console.log('all places', status);
       for (const place of data) {
         $('.places').append(
           `
@@ -115,21 +136,27 @@ $(document).ready(function () {
   $('button.search_btn').click(function () {
     $(this).attr('disabled', true);
     $('button.search_btn').text('Loading...');
-
+    // console.log(
+    //   'search:',
+    //   Object.values(states),
+    //   Object.values(cities),
+    //   Object.values(amenityDict)
+    // );
     $.ajax({
       type: 'POST',
       url: `http://${localhost}:5001/api/v1/places_search/`,
       contentType: 'application/json',
       data: JSON.stringify({
         amenities: [...Object.keys(amenityDict)],
-        states: [...Object.keys(statesCities)]
+        states: [...Object.keys(states)],
+        cities: [...Object.keys(cities)]
       }),
       success: function (data, status) {
         $('.places').empty();
         $('button.search_btn').removeAttr('disabled');
         $('button.search_btn').text('Search');
 
-        console.log('success', data);
+        // console.log('success', data);
         for (const place of data) {
           $('.places').append(
             `
